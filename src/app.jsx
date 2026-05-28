@@ -20,12 +20,12 @@ import {
 // 아래 항목들을 본인의 Firebase 웹 앱 등록 정보로 채워주세요.
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyCT35ovZk50Ym5JdBi9fU2Clb36RIWLVGM",
-  authDomain: "couple-calendar-1cbd8.firebaseapp.com",
-  projectId: "couple-calendar-1cbd8",
-  storageBucket: "couple-calendar-1cbd8.firebasestorage.app",
-  messagingSenderId: "774569979715",
-  appId: "1:774569979715:web:0beefd85f4a994f57249f6"
+  apiKey: "AIzaSyDC40v1FiAgPsQcMPQZJJ0s8Lc5kJ4NUsI",
+  authDomain: "schedule-a46eb.firebaseapp.com",
+  projectId: "schedule-a46eb",
+  storageBucket: "schedule-a46eb.firebasestorage.app",
+  messagingSenderId: "430186493236",
+  appId: "1:430186493236:web:da05a12f3128b293562161"
 };
 
 // Firebase 초기화
