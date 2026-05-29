@@ -19,12 +19,12 @@ import {
 // Firebase 설정 정보
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyCT35ovZk50Ym5JdBi9fU2Clb36RIWLVGM",
-  authDomain: "couple-calendar-1cbd8.firebaseapp.com",
-  projectId: "couple-calendar-1cbd8",
-  storageBucket: "couple-calendar-1cbd8.firebasestorage.app",
-  messagingSenderId: "774569979715",
-  appId: "1:774569979715:web:0beefd85f4a994f57249f6"
+  apiKey: "AIzaSyDC40v1FiAgPsQcMPQZJJ0s8Lc5kJ4NUsI",
+  authDomain: "schedule-a46eb.firebaseapp.com",
+  projectId: "schedule-a46eb",
+  storageBucket: "schedule-a46eb.firebasestorage.app",
+  messagingSenderId: "430186493236",
+  appId: "1:430186493236:web:da05a12f3128b293562161"
 };
 
 // Firebase 초기화
@@ -86,12 +86,6 @@ const UserIcon = ({ className }) => (
   </svg>
 );
 
-const UsersIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A11.386 11.386 0 0110.089 18M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 2.25a3 3 0 11-6 0 3 3 0 016 0zM4.005 21.803A11.3 11.3 0 013 18c0-1.343.361-2.61.993-3.7M8.284 12.753A7.545 7.545 0 0112 11.25c1.24 0 2.42.298 3.465.83M12 11.25a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" />
-  </svg>
-);
-
 const SmileIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
@@ -121,7 +115,7 @@ export default function App() {
   const [events, setEvents] = useState([]);
   const [memos, setMemos] = useState([]);
   
-  // 디데이 날짜 기본값 변경: 2020-01-01 -> 2023-01-03
+  // 기념일 고정: 요구하신 '2023-01-03' 일자로 기본 고정
   const [anniversaryDate, setAnniversaryDate] = useState(() => {
     return localStorage.getItem('anniversary_date') || '2023-01-03';
   });
@@ -290,7 +284,7 @@ export default function App() {
     return `${y}-${m}-${d}`;
   };
 
-  // --- 날짜 클릭 핸들러 (상세보기 연동) ---
+  // --- 날짜 클릭 핸들러 (원터치 상세보기 연동) ---
   const handleDateClick = (date) => {
     setSelectedDateStr(formatDateString(date));
   };
@@ -399,7 +393,7 @@ export default function App() {
     }
   };
 
-  // --- 날짜별 일정 매핑 ---
+  // --- 날짜별 일정 묶음 매핑 ---
   const eventsByDate = useMemo(() => {
     const map = {};
     events.forEach(evt => {
@@ -412,7 +406,7 @@ export default function App() {
     return map;
   }, [events]);
 
-  // 선택한 날짜에 등록된 상세 일정들
+  // 선택한 특정 날짜의 실시간 상세 일정 리스트
   const selectedDateEvents = useMemo(() => {
     return eventsByDate[selectedDateStr] || [];
   }, [eventsByDate, selectedDateStr]);
@@ -421,7 +415,7 @@ export default function App() {
     setAlertMessage(message);
   };
 
-  // 날짜 텍스트를 한글 포맷으로 파싱
+  // 한글 날짜 명칭 표시 포맷
   const formatSelectedDateKo = (dateStr) => {
     if (!dateStr) return '';
     const parts = dateStr.split('-');
@@ -431,11 +425,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-sky-50 text-slate-800 pb-12 font-sans antialiased">
-      {/* 헤더 */}
+      {/* 헤더 바 */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-white/90 border-b border-rose-100/50 shadow-sm px-4 py-3">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
           
-          {/* 타이틀 로고 */}
+          {/* 로고 영역 */}
           <div className="flex items-center gap-2">
             <div className="p-2.5 bg-rose-500 rounded-2xl text-white shadow-md animate-pulse">
               <HeartIcon className="w-5 h-5 fill-white" />
@@ -448,7 +442,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* 기념일 및 디데이 */}
+          {/* 기념일 디데이 트래커 */}
           <div className="flex items-center gap-2 bg-gradient-to-r from-rose-50 to-rose-100/50 border border-rose-200/60 rounded-2xl py-1.5 px-4 shadow-xs text-sm">
             <div className="flex items-center gap-1.5 text-rose-600 font-semibold">
               <SmileIcon className="w-4 h-4 text-rose-500" />
@@ -469,7 +463,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* 아내 / 남편 역할 전환 스위치 */}
+          {/* 역할 전환 버튼 스위치 */}
           <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/50">
             <button
               onClick={() => handleRoleChange('husband')}
@@ -493,13 +487,13 @@ export default function App() {
         </div>
       </header>
 
-      {/* 본문 레이아웃 */}
+      {/* 본문 그리드 */}
       <main className="max-w-7xl mx-auto px-3 md:px-4 mt-4 md:mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
         
-        {/* 사이드바 영역 (모바일 상단 / 데스크톱 좌측) */}
+        {/* 왼쪽 위젯 정보 영역 */}
         <div className="lg:col-span-1 space-y-6">
           
-          {/* 나의 프로필 */}
+          {/* 캐릭터 위젯 */}
           <div className="bg-white rounded-3xl p-5 border border-rose-100/40 shadow-xs">
             <h2 className="font-bold text-slate-700 mb-3 flex items-center gap-1.5 text-sm md:text-base">
               <SmileIcon className="w-5 h-5 text-rose-400" />
@@ -517,13 +511,13 @@ export default function App() {
                 </div>
                 <div className="text-[10px] md:text-xs text-emerald-500 font-bold flex items-center gap-1 mt-0.5">
                   <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
-                  실시간 서버 동기화 중
+                  실시간 연동 가동 중
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 한마디 톡 보드 (실시간 메모) */}
+          {/* 한마디 톡 위젯 */}
           <div className="bg-white rounded-3xl p-5 border border-rose-100/40 shadow-xs flex flex-col h-[320px] md:h-[380px]">
             <h3 className="font-bold text-slate-700 mb-3 flex items-center gap-1.5 text-sm md:text-base">
               <MessageIcon className="w-5 h-5 text-indigo-400" />
@@ -534,7 +528,7 @@ export default function App() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="자기야 사랑해 ❤️"
+                  placeholder="오늘 한마디를 나누세요 💕"
                   value={newMemoText}
                   onChange={(e) => setNewMemoText(e.target.value)}
                   maxLength={50}
@@ -553,7 +547,7 @@ export default function App() {
               {memos.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-slate-400 py-8">
                   <FileTextIcon className="w-8 h-8 mb-2 opacity-50 text-rose-300" />
-                  <span className="text-[11px] font-medium">부부가 실시간 한마디를 남겨보세요.</span>
+                  <span className="text-[11px] font-medium text-slate-400">실시간 한마디를 먼저 시작해보세요!</span>
                 </div>
               ) : (
                 memos.map((memo) => {
@@ -583,10 +577,10 @@ export default function App() {
           </div>
         </div>
 
-        {/* 달력 및 일정 상세 목록 (오른쪽 3칸 차지) */}
+        {/* 오른쪽 메인 달력 및 일정 정보 영역 */}
         <div className="lg:col-span-3 space-y-6">
           
-          {/* 달력 헤더 및 요일 컨트롤러 */}
+          {/* 달력 헤더 */}
           <div className="bg-white rounded-3xl p-4 border border-rose-100/40 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button 
@@ -617,7 +611,7 @@ export default function App() {
                 오늘
               </button>
               <button 
-                onClick={() => openAddModal(selectedDateStr)} 
+                onClick={() => openAddModal(new Date())} 
                 className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-5 py-2.5 bg-rose-500 text-white rounded-xl text-xs md:text-sm font-bold hover:bg-rose-600 transition shadow-md"
                 style={{ minHeight: '44px' }}
               >
@@ -626,10 +620,10 @@ export default function App() {
             </div>
           </div>
 
-          {/* 달력 본체 */}
+          {/* 달력 본체 그리드 */}
           <div className="bg-white rounded-3xl border border-rose-100/40 shadow-xs overflow-hidden">
             
-            {/* 요일 */}
+            {/* 요일 헤더 */}
             <div className="grid grid-cols-7 bg-slate-50/70 border-b border-slate-100 text-center text-xs font-bold py-3">
               <div className="text-rose-500">일</div>
               <div>월</div>
@@ -640,7 +634,7 @@ export default function App() {
               <div className="text-sky-500">토</div>
             </div>
 
-            {/* 날짜 패널 */}
+            {/* 날짜 반복 렌더링 */}
             <div className="grid grid-cols-7 divide-x divide-y divide-slate-100 border-b border-slate-100">
               {calendarDays.map(({ date, isCurrentMonth, key }) => {
                 const dateStr = formatDateString(date);
@@ -650,7 +644,7 @@ export default function App() {
                 const isSunday = date.getDay() === 0;
                 const isSaturday = date.getDay() === 6;
 
-                // 해당 날짜에 남편, 아내, 공동 일정이 있는지 검사
+                // 해당 날짜 카테고리별 일정 유무 체크
                 const hasHusband = dayEvents.some(e => e.category === 'husband');
                 const hasWife = dayEvents.some(e => e.category === 'wife');
                 const hasJoint = dayEvents.some(e => e.category === 'joint');
@@ -664,7 +658,7 @@ export default function App() {
                     } ${isSelected ? 'bg-rose-50/30' : ''}`}
                   >
                     
-                    {/* 상단 날짜 및 선택 표시 원 */}
+                    {/* 날짜 넘버링 레이아웃 */}
                     <div className="flex items-center justify-between">
                       <span className={`text-xs md:text-sm font-bold w-7 h-7 flex items-center justify-center rounded-xl transition-all ${
                         isSelected ? 'bg-rose-500 text-white shadow-md' :
@@ -677,10 +671,10 @@ export default function App() {
                       </span>
                     </div>
 
-                    {/* 달력 내용부: 모바일 화면과 데스크톱 화면의 스마트 분리 UI */}
+                    {/* 달력 컨텐츠 영역: PC 모드(카드), 모바일 모드(컬러 점) 반응형 고강도 지원 */}
                     <div className="flex-1 flex flex-col justify-end mt-1">
                       
-                      {/* 데스크톱 전용 일정 카드 (화면 폭이 넓을 때 보임) */}
+                      {/* PC 모드 전용 (상세 카드 형태) */}
                       <div className="hidden sm:block space-y-1 overflow-y-auto max-h-[70px]">
                         {dayEvents.map((evt) => {
                           let catBg = 'bg-purple-50 text-purple-700 border-purple-100';
@@ -708,11 +702,11 @@ export default function App() {
                         })}
                       </div>
 
-                      {/* 모바일 전용 미니 닷(Dot) 뱃지 (화면 폭이 작을 때만 보임) */}
+                      {/* 모바일 모드 전용 (간단 컬러 닷으로 깨짐 완전 방지!) */}
                       <div className="flex sm:hidden justify-center items-center gap-1 py-1 h-3 shrink-0">
-                        {hasHusband && <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-scale"></span>}
-                        {hasWife && <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-scale"></span>}
-                        {hasJoint && <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-scale"></span>}
+                        {hasHusband && <span className="w-1.5 h-1.5 rounded-full bg-sky-400"></span>}
+                        {hasWife && <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>}
+                        {hasJoint && <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>}
                       </div>
 
                     </div>
@@ -721,7 +715,7 @@ export default function App() {
               })}
             </div>
             
-            {/* 달력 하단 간편 범례 */}
+            {/* 하단 범례 */}
             <div className="bg-slate-50/50 py-3.5 px-5 flex flex-wrap items-center justify-center sm:justify-end gap-x-5 gap-y-2 border-t border-slate-100 text-xs text-slate-500 font-bold">
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-sky-400"></span> 남편 일정
@@ -736,7 +730,7 @@ export default function App() {
 
           </div>
 
-          {/* 📱 모바일/PC 스마트 통합 - 선택한 날짜의 상세 일정 뷰어 (매우 중요!) */}
+          {/* 📱 모바일 터치 대응 최강자 - 하단 선택한 일자 상세 연동 리스트 뷰어 */}
           <div className="bg-white rounded-3xl p-5 border border-rose-100/50 shadow-md">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-100">
               <div>
@@ -744,24 +738,24 @@ export default function App() {
                   <span className="inline-block w-2.5 h-5 bg-rose-500 rounded-full"></span>
                   {formatSelectedDateKo(selectedDateStr)}
                 </h3>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">날짜를 터치하면 해당 날짜의 일정을 한눈에 모아볼 수 있습니다.</p>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">날짜 칸을 누르면 해당 일자의 실시간 스케줄이 아래에 자세하게 로드됩니다.</p>
               </div>
               <button
-                onClick={() => openAddModal(selectedDateStr)}
+                onClick={() => openAddModal(new Date(selectedDateStr))}
                 className="w-full sm:w-auto px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-xs md:text-sm font-black hover:bg-rose-100 transition flex items-center justify-center gap-1.5"
                 style={{ minHeight: '44px' }}
               >
-                <PlusIcon className="w-4 h-4" /> 이 날짜에 일정 등록
+                <PlusIcon className="w-4 h-4" /> 이 날에 스케줄 추가
               </button>
             </div>
 
-            {/* 선택 날짜 상세 리스트 */}
+            {/* 선택 날짜 상세 리스트 보드 */}
             <div className="space-y-3">
               {selectedDateEvents.length === 0 ? (
                 <div className="py-8 text-center text-slate-400 flex flex-col items-center justify-center">
                   <CalIcon className="w-10 h-10 mb-2 opacity-30 text-rose-400" />
-                  <p className="text-xs md:text-sm font-semibold">이 날짜에는 등록된 일정이 없습니다.</p>
-                  <p className="text-[11px] text-slate-400 mt-1">소중한 일정을 기록해 두 사람이 실시간으로 공유해 보세요!</p>
+                  <p className="text-xs md:text-sm font-semibold">이 날짜에는 등록된 일정이 아직 없습니다.</p>
+                  <p className="text-[11px] text-slate-400 mt-1">위의 버튼을 눌러 부부의 첫 일정을 기록해보세요!</p>
                 </div>
               ) : (
                 selectedDateEvents.map((evt) => {
@@ -792,12 +786,10 @@ export default function App() {
                           </span>
                         </div>
                         
-                        {/* 크게 강조된 제목 */}
                         <h4 className="text-sm md:text-base font-extrabold text-slate-800 truncate">
                           {evt.title}
                         </h4>
 
-                        {/* 메모 노출 */}
                         {evt.memo && (
                           <p className="text-xs text-slate-500 bg-white/70 p-2.5 rounded-xl border border-slate-100/80 font-medium">
                             {evt.memo}
@@ -805,7 +797,7 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* 크게 강조된 터치 타겟 제어 버튼 모음 */}
+                      {/* 제어 영역 버튼 규격 최적화 (모바일 터치 44px) */}
                       <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                         <button
                           onClick={(e) => openEditModal(evt, e)}
@@ -859,7 +851,7 @@ export default function App() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">일정 내용 *</label>
                 <input 
                   type="text" 
-                  placeholder="예: 맛집 저녁 식사 🥂" 
+                  placeholder="예: 우리 데이트 맛집 투어 💖" 
                   value={newEventTitle} 
                   onChange={(e) => setNewEventTitle(e.target.value)} 
                   className="w-full text-sm border rounded-xl px-3 py-2.5 font-bold" 
@@ -900,7 +892,7 @@ export default function App() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">상세 메모 (선택)</label>
                 <textarea 
                   rows="2" 
-                  placeholder="준비물이나 메모할 내용을 적어주세요." 
+                  placeholder="메모를 자유롭게 남겨보세요." 
                   value={newEventMemo} 
                   onChange={(e) => setNewEventMemo(e.target.value)} 
                   className="w-full text-sm border rounded-xl px-3 py-2.5 resize-none font-medium"
