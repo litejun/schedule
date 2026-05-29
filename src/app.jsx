@@ -16,16 +16,15 @@ import {
 } from 'firebase/firestore';
 
 // ==========================================
-// ★ 나의 Firebase 정보 입력하기 ★
-// 아래 항목들을 본인의 Firebase 웹 앱 등록 정보로 채워주세요.
+// Firebase 설정 정보
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyDC40v1FiAgPsQcMPQZJJ0s8Lc5kJ4NUsI",
-  authDomain: "schedule-a46eb.firebaseapp.com",
-  projectId: "schedule-a46eb",
-  storageBucket: "schedule-a46eb.firebasestorage.app",
-  messagingSenderId: "430186493236",
-  appId: "1:430186493236:web:da05a12f3128b293562161"
+  apiKey: "AIzaSyCT35ovZk50Ym5JdBi9fU2Clb36RIWLVGM",
+  authDomain: "couple-calendar-1cbd8.firebaseapp.com",
+  projectId: "couple-calendar-1cbd8",
+  storageBucket: "couple-calendar-1cbd8.firebasestorage.app",
+  messagingSenderId: "774569979715",
+  appId: "1:774569979715:web:0beefd85f4a994f57249f6"
 };
 
 // Firebase 초기화
@@ -33,11 +32,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 우리 부부만의 고유한 데이터 저장 공간 이름 (원하는 영문 닉네임으로 자유롭게 설정 가능)
+// 우리 부부만의 고유한 데이터 저장 공간 이름
 const appId = 'our-precious-calendar-v1';
 
 // ==========================================
-// 자체 제작 SVG 아이콘 컴포넌트 (외부 라이브러리 에러 방지)
+// 자체 제작 SVG 아이콘 컴포넌트
 // ==========================================
 const HeartIcon = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -121,13 +120,23 @@ export default function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [memos, setMemos] = useState([]);
+  
+  // 디데이 날짜 기본값 변경: 2020-01-01 -> 2023-01-03
   const [anniversaryDate, setAnniversaryDate] = useState(() => {
-    return localStorage.getItem('anniversary_date') || '2020-01-01';
+    return localStorage.getItem('anniversary_date') || '2023-01-03';
+  });
+  
+  // 모바일 사용성을 위해 오늘(선택된 날짜)의 상태를 관리
+  const [selectedDateStr, setSelectedDateStr] = useState(() => {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   });
   
   // 모달 및 입력창 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDateStr, setSelectedDateStr] = useState('');
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventTime, setNewEventTime] = useState('12:00');
   const [newEventMemo, setNewEventMemo] = useState('');
@@ -269,7 +278,9 @@ export default function App() {
   };
 
   const setToday = () => {
-    setCurrentDate(new Date());
+    const today = new Date();
+    setCurrentDate(today);
+    setSelectedDateStr(formatDateString(today));
   };
 
   const formatDateString = (date) => {
@@ -279,9 +290,14 @@ export default function App() {
     return `${y}-${m}-${d}`;
   };
 
-  // --- 일정 추가/수정/삭제 핸들러 ---
-  const openAddModal = (date) => {
+  // --- 날짜 클릭 핸들러 (상세보기 연동) ---
+  const handleDateClick = (date) => {
     setSelectedDateStr(formatDateString(date));
+  };
+
+  // --- 일정 추가/수정/삭제 핸들러 ---
+  const openAddModal = (dateStr) => {
+    setSelectedDateStr(dateStr);
     setNewEventTitle('');
     setNewEventTime('12:00');
     setNewEventMemo('');
@@ -341,7 +357,7 @@ export default function App() {
   };
 
   const handleDeleteEvent = async (id, e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     if (!user) return;
     
     if (confirm("이 일정을 삭제하시겠습니까?")) {
@@ -383,6 +399,7 @@ export default function App() {
     }
   };
 
+  // --- 날짜별 일정 매핑 ---
   const eventsByDate = useMemo(() => {
     const map = {};
     events.forEach(evt => {
@@ -395,126 +412,148 @@ export default function App() {
     return map;
   }, [events]);
 
+  // 선택한 날짜에 등록된 상세 일정들
+  const selectedDateEvents = useMemo(() => {
+    return eventsByDate[selectedDateStr] || [];
+  }, [eventsByDate, selectedDateStr]);
+
   const showAlert = (message) => {
     setAlertMessage(message);
   };
 
+  // 날짜 텍스트를 한글 포맷으로 파싱
+  const formatSelectedDateKo = (dateStr) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    return `${parts[0]}년 ${parseInt(parts[1])}월 ${parseInt(parts[2])}일`;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-sky-50 text-slate-800 pb-12 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-sky-50 text-slate-800 pb-12 font-sans antialiased">
       {/* 헤더 */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/80 border-b border-rose-100/50 shadow-sm px-4 py-3">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/90 border-b border-rose-100/50 shadow-sm px-4 py-3">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+          
+          {/* 타이틀 로고 */}
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-rose-500 rounded-full text-white shadow-md animate-pulse">
+            <div className="p-2.5 bg-rose-500 rounded-2xl text-white shadow-md animate-pulse">
               <HeartIcon className="w-5 h-5 fill-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-rose-500 to-sky-500 bg-clip-text text-transparent">
+              <h1 className="text-lg md:text-xl font-bold tracking-tight bg-gradient-to-r from-rose-500 to-sky-500 bg-clip-text text-transparent">
                 우리 둘만의 커플 달력
               </h1>
-              <p className="text-xs text-slate-500">실시간으로 일정을 기록하고 공유해요</p>
+              <p className="text-[10px] md:text-xs text-slate-500 font-medium">실시간 데이트 일정 조율</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 bg-white/90 border border-rose-100 rounded-full py-1.5 px-4 shadow-sm text-sm">
-            <div className="flex items-center gap-1.5 text-rose-500 font-semibold">
-              <SmileIcon className="w-4 h-4" />
-              <span>우리가 만난 지</span>
-              <span className="text-base font-extrabold px-1 bg-rose-100 text-rose-600 rounded">
+          {/* 기념일 및 디데이 */}
+          <div className="flex items-center gap-2 bg-gradient-to-r from-rose-50 to-rose-100/50 border border-rose-200/60 rounded-2xl py-1.5 px-4 shadow-xs text-sm">
+            <div className="flex items-center gap-1.5 text-rose-600 font-semibold">
+              <SmileIcon className="w-4 h-4 text-rose-500" />
+              <span>우리가 함께한 지</span>
+              <span className="text-base md:text-lg font-black px-1.5 py-0.5 bg-rose-500 text-white rounded-lg shadow-xs">
                 D+{dDayCount}
               </span>
               <span>일</span>
             </div>
-            <div className="text-slate-300">|</div>
-            <div className="flex items-center gap-1 text-xs text-slate-500">
-              <span>시작일:</span>
+            <div className="text-slate-300 mx-1">|</div>
+            <div className="flex items-center gap-1 text-xs text-slate-600">
               <input 
                 type="date" 
                 value={anniversaryDate} 
                 onChange={handleAnniversaryChange}
-                className="bg-transparent border-none p-0 focus:ring-0 text-slate-700 font-medium cursor-pointer max-w-[105px]" 
+                className="bg-transparent border-none p-0 focus:ring-0 text-slate-700 font-bold cursor-pointer max-w-[105px] text-center" 
               />
             </div>
           </div>
 
-          <div className="flex items-center bg-slate-100 p-1 rounded-full text-sm">
+          {/* 아내 / 남편 역할 전환 스위치 */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/50">
             <button
               onClick={() => handleRoleChange('husband')}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full transition-all duration-200 font-medium ${
-                myRole === 'husband' ? 'bg-sky-500 text-white shadow-sm' : 'text-slate-600'
+              className={`flex items-center justify-center gap-1.5 px-5 py-2 rounded-xl transition-all duration-300 font-bold text-xs md:text-sm ${
+                myRole === 'husband' ? 'bg-sky-500 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'
               }`}
+              style={{ minHeight: '38px' }}
             >
-              <UserIcon className="w-4 h-4" />
-              남편
+              🤵 남편
             </button>
             <button
               onClick={() => handleRoleChange('wife')}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full transition-all duration-200 font-medium ${
-                myRole === 'wife' ? 'bg-rose-400 text-white shadow-sm' : 'text-slate-600'
+              className={`flex items-center justify-center gap-1.5 px-5 py-2 rounded-xl transition-all duration-300 font-bold text-xs md:text-sm ${
+                myRole === 'wife' ? 'bg-rose-400 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'
               }`}
+              style={{ minHeight: '38px' }}
             >
-              <UserIcon className="w-4 h-4" />
-              아내
+              👰 아내
             </button>
           </div>
         </div>
       </header>
 
       {/* 본문 레이아웃 */}
-      <main className="max-w-7xl mx-auto px-4 mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <main className="max-w-7xl mx-auto px-3 md:px-4 mt-4 md:mt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        {/* 사이드바 영역 (모바일 상단 / 데스크톱 좌측) */}
         <div className="lg:col-span-1 space-y-6">
-          {/* 캐릭터 프로필 */}
-          <div className="bg-white rounded-2xl p-5 border border-rose-100/40 shadow-sm">
-            <h2 className="font-semibold text-slate-700 mb-4 flex items-center gap-1.5">
+          
+          {/* 나의 프로필 */}
+          <div className="bg-white rounded-3xl p-5 border border-rose-100/40 shadow-xs">
+            <h2 className="font-bold text-slate-700 mb-3 flex items-center gap-1.5 text-sm md:text-base">
               <SmileIcon className="w-5 h-5 text-rose-400" />
-              오늘 나의 캐릭터
+              오늘의 나
             </h2>
-            <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-bold ${
+            <div className="flex items-center gap-4 bg-gradient-to-r from-slate-50 to-slate-100 p-4 rounded-2xl border border-slate-100">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-md ${
                 myRole === 'husband' ? 'bg-sky-400' : 'bg-rose-400'
               }`}>
                 {myRole === 'husband' ? '🤵' : '👰'}
               </div>
               <div>
-                <div className="font-bold text-slate-800">
-                  {myRole === 'husband' ? '남편님' : '아내님'}
+                <div className="font-extrabold text-slate-800 text-sm md:text-base">
+                  {myRole === 'husband' ? '든든한 남편님' : '러블리 아내님'}
                 </div>
-                <div className="text-xs text-green-500 flex items-center gap-1 mt-0.5">
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
-                  실시간 공유 중
+                <div className="text-[10px] md:text-xs text-emerald-500 font-bold flex items-center gap-1 mt-0.5">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+                  실시간 서버 동기화 중
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 한마디 톡 보드 */}
-          <div className="bg-white rounded-2xl p-5 border border-rose-100/40 shadow-sm flex flex-col h-[380px]">
-            <h3 className="font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
+          {/* 한마디 톡 보드 (실시간 메모) */}
+          <div className="bg-white rounded-3xl p-5 border border-rose-100/40 shadow-xs flex flex-col h-[320px] md:h-[380px]">
+            <h3 className="font-bold text-slate-700 mb-3 flex items-center gap-1.5 text-sm md:text-base">
               <MessageIcon className="w-5 h-5 text-indigo-400" />
-              실시간 한마디 보드
+              실시간 한마디 톡
             </h3>
 
-            <form onSubmit={handleAddMemo} className="mb-4">
+            <form onSubmit={handleAddMemo} className="mb-3">
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="오늘 어떤가요?"
+                  placeholder="자기야 사랑해 ❤️"
                   value={newMemoText}
                   onChange={(e) => setNewMemoText(e.target.value)}
                   maxLength={50}
-                  className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none"
+                  className="flex-1 text-xs md:text-sm border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-rose-200"
                 />
-                <button type="submit" className="px-3 py-2 bg-rose-500 text-white rounded-lg text-sm font-semibold hover:bg-rose-600">
-                  등록
+                <button 
+                  type="submit" 
+                  className="px-4 py-2.5 bg-rose-500 text-white rounded-xl text-xs md:text-sm font-bold hover:bg-rose-600 transition shadow-xs shrink-0"
+                >
+                  보내기
                 </button>
               </div>
             </form>
 
-            <div className="flex-1 overflow-y-auto space-y-2.5 text-sm">
+            <div className="flex-1 overflow-y-auto space-y-2.5 text-xs md:text-sm pr-1">
               {memos.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-slate-400 text-xs py-8">
-                  <FileTextIcon className="w-8 h-8 mb-2 opacity-55" />
-                  <span>실시간 메세지를 남겨보세요.</span>
+                <div className="h-full flex flex-col items-center justify-center text-slate-400 py-8">
+                  <FileTextIcon className="w-8 h-8 mb-2 opacity-50 text-rose-300" />
+                  <span className="text-[11px] font-medium">부부가 실시간 한마디를 남겨보세요.</span>
                 </div>
               ) : (
                 memos.map((memo) => {
@@ -522,17 +561,20 @@ export default function App() {
                   return (
                     <div 
                       key={memo.id}
-                      className={`p-2.5 rounded-xl border relative group ${
-                        isHusband ? 'bg-sky-50/50 border-sky-100 text-sky-900' : 'bg-rose-50/50 border-rose-100 text-rose-900'
+                      className={`p-3 rounded-2xl border relative group transition-all duration-200 ${
+                        isHusband ? 'bg-sky-50/70 border-sky-100 text-sky-900' : 'bg-rose-50/70 border-rose-100 text-rose-900'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-xs">{isHusband ? '🤵 남편' : '👰 아내'}</span>
-                        <button onClick={() => handleDeleteMemo(memo.id)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 absolute top-1.5 right-1.5">
+                        <span className="font-bold text-[10px]">{isHusband ? '🤵 남편' : '👰 아내'}</span>
+                        <button 
+                          onClick={() => handleDeleteMemo(memo.id)} 
+                          className="text-slate-400 hover:text-red-500 md:opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
+                        >
                           <TrashIcon className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <p className="break-all whitespace-pre-wrap leading-relaxed pr-4 text-xs">{memo.text}</p>
+                      <p className="break-all whitespace-pre-wrap leading-relaxed text-xs font-medium">{memo.text}</p>
                     </div>
                   );
                 })
@@ -541,82 +583,253 @@ export default function App() {
           </div>
         </div>
 
-        {/* 메인 달력 */}
-        <div className="lg:col-span-3 space-y-4">
-          <div className="bg-white rounded-2xl p-4 border border-rose-100/40 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <button onClick={prevMonth} className="p-2 hover:bg-slate-100 rounded-lg"><ChevronLeftIcon className="w-5 h-5" /></button>
-              <h2 className="text-xl font-bold text-slate-800">{currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월</h2>
-              <button onClick={nextMonth} className="p-2 hover:bg-slate-100 rounded-lg"><ChevronRightIcon className="w-5 h-5" /></button>
+        {/* 달력 및 일정 상세 목록 (오른쪽 3칸 차지) */}
+        <div className="lg:col-span-3 space-y-6">
+          
+          {/* 달력 헤더 및 요일 컨트롤러 */}
+          <div className="bg-white rounded-3xl p-4 border border-rose-100/40 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={prevMonth} 
+                className="p-3 hover:bg-slate-100 rounded-xl transition border border-slate-100"
+                style={{ minWidth: '44px', minHeight: '44px' }}
+              >
+                <ChevronLeftIcon className="w-5 h-5" />
+              </button>
+              <h2 className="text-lg md:text-xl font-black text-slate-800">
+                {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
+              </h2>
+              <button 
+                onClick={nextMonth} 
+                className="p-3 hover:bg-slate-100 rounded-xl transition border border-slate-100"
+                style={{ minWidth: '44px', minHeight: '44px' }}
+              >
+                <ChevronRightIcon className="w-5 h-5" />
+              </button>
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={setToday} className="px-4 py-1.5 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50">오늘</button>
-              <button onClick={() => openAddModal(new Date())} className="flex items-center gap-1 px-4 py-1.5 bg-rose-500 text-white rounded-lg text-sm font-semibold hover:bg-rose-600">
+            
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button 
+                onClick={setToday} 
+                className="flex-1 sm:flex-initial px-4 py-2.5 border border-slate-200 rounded-xl text-xs md:text-sm font-bold hover:bg-slate-50 transition"
+                style={{ minHeight: '44px' }}
+              >
+                오늘
+              </button>
+              <button 
+                onClick={() => openAddModal(selectedDateStr)} 
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-5 py-2.5 bg-rose-500 text-white rounded-xl text-xs md:text-sm font-bold hover:bg-rose-600 transition shadow-md"
+                style={{ minHeight: '44px' }}
+              >
                 <PlusIcon className="w-4 h-4" /> 일정 추가
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-rose-100/40 shadow-sm overflow-hidden">
-            <div className="grid grid-cols-7 bg-slate-50 border-b border-slate-100 text-center text-xs font-semibold py-3">
-              <div className="text-rose-500">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div className="text-sky-500">토</div>
+          {/* 달력 본체 */}
+          <div className="bg-white rounded-3xl border border-rose-100/40 shadow-xs overflow-hidden">
+            
+            {/* 요일 */}
+            <div className="grid grid-cols-7 bg-slate-50/70 border-b border-slate-100 text-center text-xs font-bold py-3">
+              <div className="text-rose-500">일</div>
+              <div>월</div>
+              <div>화</div>
+              <div>수</div>
+              <div>목</div>
+              <div>금</div>
+              <div className="text-sky-500">토</div>
             </div>
 
-            <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
+            {/* 날짜 패널 */}
+            <div className="grid grid-cols-7 divide-x divide-y divide-slate-100 border-b border-slate-100">
               {calendarDays.map(({ date, isCurrentMonth, key }) => {
                 const dateStr = formatDateString(date);
                 const dayEvents = eventsByDate[dateStr] || [];
                 const isToday = formatDateString(new Date()) === dateStr;
+                const isSelected = selectedDateStr === dateStr;
+                const isSunday = date.getDay() === 0;
+                const isSaturday = date.getDay() === 6;
+
+                // 해당 날짜에 남편, 아내, 공동 일정이 있는지 검사
+                const hasHusband = dayEvents.some(e => e.category === 'husband');
+                const hasWife = dayEvents.some(e => e.category === 'wife');
+                const hasJoint = dayEvents.some(e => e.category === 'joint');
 
                 return (
                   <div
                     key={key}
-                    onClick={() => openAddModal(date)}
-                    className={`min-h-[110px] p-1.5 hover:bg-rose-50/20 cursor-pointer flex flex-col justify-between group relative ${
-                      isCurrentMonth ? 'bg-white' : 'bg-slate-50/50'
-                    }`}
+                    onClick={() => handleDateClick(date)}
+                    className={`min-h-[70px] sm:min-h-[110px] p-1.5 hover:bg-rose-50/20 cursor-pointer flex flex-col justify-between transition-all duration-150 relative ${
+                      isCurrentMonth ? 'bg-white' : 'bg-slate-50/40'
+                    } ${isSelected ? 'bg-rose-50/30' : ''}`}
                   >
+                    
+                    {/* 상단 날짜 및 선택 표시 원 */}
                     <div className="flex items-center justify-between">
-                      <span className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full ${
-                        !isCurrentMonth ? 'text-slate-300' : isToday ? 'bg-rose-500 text-white' : 'text-slate-600'
-                      }`}>{date.getDate()}</span>
+                      <span className={`text-xs md:text-sm font-bold w-7 h-7 flex items-center justify-center rounded-xl transition-all ${
+                        isSelected ? 'bg-rose-500 text-white shadow-md' :
+                        isToday ? 'bg-slate-100 text-rose-500 font-extrabold ring-1 ring-rose-200' :
+                        !isCurrentMonth ? 'text-slate-300' :
+                        isSunday ? 'text-rose-500' :
+                        isSaturday ? 'text-sky-500' : 'text-slate-600'
+                      }`}>
+                        {date.getDate()}
+                      </span>
                     </div>
 
-                    <div className="flex-1 mt-1 space-y-1 overflow-y-auto max-h-[85px]">
-                      {dayEvents.map((evt) => {
-                        let catBg = 'bg-purple-50 text-purple-700 border-purple-100';
-                        let catDot = 'bg-purple-400';
-                        if (evt.category === 'husband') {
-                          catBg = 'bg-sky-50 text-sky-700 border-sky-100';
-                          catDot = 'bg-sky-400';
-                        } else if (evt.category === 'wife') {
-                          catBg = 'bg-rose-50 text-rose-700 border-rose-100';
-                          catDot = 'bg-rose-400';
-                        }
+                    {/* 달력 내용부: 모바일 화면과 데스크톱 화면의 스마트 분리 UI */}
+                    <div className="flex-1 flex flex-col justify-end mt-1">
+                      
+                      {/* 데스크톱 전용 일정 카드 (화면 폭이 넓을 때 보임) */}
+                      <div className="hidden sm:block space-y-1 overflow-y-auto max-h-[70px]">
+                        {dayEvents.map((evt) => {
+                          let catBg = 'bg-purple-50 text-purple-700 border-purple-100';
+                          let catDot = 'bg-purple-400';
+                          if (evt.category === 'husband') {
+                            catBg = 'bg-sky-50 text-sky-700 border-sky-100';
+                            catDot = 'bg-sky-400';
+                          } else if (evt.category === 'wife') {
+                            catBg = 'bg-rose-50 text-rose-700 border-rose-100';
+                            catDot = 'bg-rose-400';
+                          }
 
-                        return (
-                          <div
-                            key={evt.id}
-                            onClick={(e) => openEditModal(evt, e)}
-                            className={`px-1.5 py-0.5 rounded text-[10px] border flex items-center gap-1 justify-between group/item ${catBg}`}
-                          >
-                            <div className="flex items-center gap-1 truncate">
-                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${catDot}`}></span>
-                              <span className="font-semibold text-slate-500 shrink-0 text-[9px]">{evt.time}</span>
-                              <span className="truncate font-medium">{evt.title}</span>
+                          return (
+                            <div
+                              key={evt.id}
+                              onClick={(e) => openEditModal(evt, e)}
+                              className={`px-1.5 py-0.5 rounded-lg text-[10px] border flex items-center gap-1 justify-between group/item ${catBg} hover:shadow-xs transition`}
+                            >
+                              <span className="truncate font-medium flex items-center gap-1">
+                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${catDot}`}></span>
+                                {evt.title}
+                              </span>
                             </div>
-                            <button onClick={(e) => handleDeleteEvent(evt.id, e)} className="opacity-0 group-item-hover/item:opacity-100 text-slate-400 hover:text-red-500">
-                              <TrashIcon className="w-3 h-3" />
-                            </button>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
+
+                      {/* 모바일 전용 미니 닷(Dot) 뱃지 (화면 폭이 작을 때만 보임) */}
+                      <div className="flex sm:hidden justify-center items-center gap-1 py-1 h-3 shrink-0">
+                        {hasHusband && <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-scale"></span>}
+                        {hasWife && <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-scale"></span>}
+                        {hasJoint && <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-scale"></span>}
+                      </div>
+
                     </div>
                   </div>
                 );
               })}
             </div>
+            
+            {/* 달력 하단 간편 범례 */}
+            <div className="bg-slate-50/50 py-3.5 px-5 flex flex-wrap items-center justify-center sm:justify-end gap-x-5 gap-y-2 border-t border-slate-100 text-xs text-slate-500 font-bold">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-sky-400"></span> 남편 일정
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-400"></span> 아내 일정
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span> 공동 일정
+              </span>
+            </div>
+
           </div>
+
+          {/* 📱 모바일/PC 스마트 통합 - 선택한 날짜의 상세 일정 뷰어 (매우 중요!) */}
+          <div className="bg-white rounded-3xl p-5 border border-rose-100/50 shadow-md">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="font-extrabold text-slate-800 text-base md:text-lg flex items-center gap-2">
+                  <span className="inline-block w-2.5 h-5 bg-rose-500 rounded-full"></span>
+                  {formatSelectedDateKo(selectedDateStr)}
+                </h3>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">날짜를 터치하면 해당 날짜의 일정을 한눈에 모아볼 수 있습니다.</p>
+              </div>
+              <button
+                onClick={() => openAddModal(selectedDateStr)}
+                className="w-full sm:w-auto px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-xs md:text-sm font-black hover:bg-rose-100 transition flex items-center justify-center gap-1.5"
+                style={{ minHeight: '44px' }}
+              >
+                <PlusIcon className="w-4 h-4" /> 이 날짜에 일정 등록
+              </button>
+            </div>
+
+            {/* 선택 날짜 상세 리스트 */}
+            <div className="space-y-3">
+              {selectedDateEvents.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 flex flex-col items-center justify-center">
+                  <CalIcon className="w-10 h-10 mb-2 opacity-30 text-rose-400" />
+                  <p className="text-xs md:text-sm font-semibold">이 날짜에는 등록된 일정이 없습니다.</p>
+                  <p className="text-[11px] text-slate-400 mt-1">소중한 일정을 기록해 두 사람이 실시간으로 공유해 보세요!</p>
+                </div>
+              ) : (
+                selectedDateEvents.map((evt) => {
+                  let badgeStyle = 'bg-purple-100 text-purple-800 border-purple-200';
+                  let badgeName = '공동';
+                  if (evt.category === 'husband') {
+                    badgeStyle = 'bg-sky-100 text-sky-800 border-sky-200';
+                    badgeName = '남편';
+                  } else if (evt.category === 'wife') {
+                    badgeStyle = 'bg-rose-100 text-rose-800 border-rose-200';
+                    badgeName = '아내';
+                  }
+
+                  return (
+                    <div 
+                      key={evt.id}
+                      onClick={(e) => openEditModal(evt, e)}
+                      className="p-4 rounded-2xl border border-slate-100 hover:border-rose-100/60 bg-gradient-to-r from-white to-slate-50/50 shadow-xs flex items-center justify-between gap-4 transition-all hover:shadow-xs active:bg-slate-100/50 cursor-pointer"
+                    >
+                      <div className="flex-1 min-w-0 space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`px-2 py-0.5 text-[10px] font-black rounded-lg border ${badgeStyle}`}>
+                            {badgeName}
+                          </span>
+                          <span className="text-xs font-bold text-slate-400 flex items-center gap-1">
+                            <ClockIcon className="w-3.5 h-3.5" />
+                            {evt.time}
+                          </span>
+                        </div>
+                        
+                        {/* 크게 강조된 제목 */}
+                        <h4 className="text-sm md:text-base font-extrabold text-slate-800 truncate">
+                          {evt.title}
+                        </h4>
+
+                        {/* 메모 노출 */}
+                        {evt.memo && (
+                          <p className="text-xs text-slate-500 bg-white/70 p-2.5 rounded-xl border border-slate-100/80 font-medium">
+                            {evt.memo}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* 크게 강조된 터치 타겟 제어 버튼 모음 */}
+                      <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={(e) => openEditModal(evt, e)}
+                          className="p-3 bg-white text-slate-600 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition"
+                          style={{ minWidth: '44px', minHeight: '44px' }}
+                        >
+                          수정
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteEvent(evt.id, e)}
+                          className="p-3 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold transition"
+                          style={{ minWidth: '44px', minHeight: '44px' }}
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+          </div>
+
         </div>
       </main>
 
@@ -624,46 +837,92 @@ export default function App() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-          <div className="relative bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-rose-100">
-            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <div className="relative bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-rose-100 animate-in fade-in zoom-in duration-150">
+            <h3 className="text-base md:text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
               <CalIcon className="w-5 h-5 text-rose-500" />
-              {editingEventId ? '일정 수정하기' : '새로운 일정 쓰기'}
+              {editingEventId ? '일정 수정하기' : '새로운 일정 추가'}
             </h3>
 
             <form onSubmit={handleSaveEvent} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">날짜</label>
-                <input type="date" value={selectedDateStr} onChange={(e) => setSelectedDateStr(e.target.value)} className="w-full text-sm border rounded-xl px-3 py-2"/>
+                <label className="block text-xs font-bold text-slate-400 mb-1">일자</label>
+                <input 
+                  type="date" 
+                  value={selectedDateStr} 
+                  onChange={(e) => setSelectedDateStr(e.target.value)} 
+                  className="w-full text-sm border rounded-xl px-3 py-2.5 font-semibold"
+                  style={{ minHeight: '44px' }}
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">일정 제목 *</label>
-                <input type="text" placeholder="예: 저녁 외식 🥂" value={newEventTitle} onChange={(e) => setNewEventTitle(e.target.value)} className="w-full text-sm border rounded-xl px-3 py-2.5" required />
+                <label className="block text-xs font-bold text-slate-400 mb-1">일정 내용 *</label>
+                <input 
+                  type="text" 
+                  placeholder="예: 맛집 저녁 식사 🥂" 
+                  value={newEventTitle} 
+                  onChange={(e) => setNewEventTitle(e.target.value)} 
+                  className="w-full text-sm border rounded-xl px-3 py-2.5 font-bold" 
+                  required 
+                  style={{ minHeight: '44px' }}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">시간</label>
-                  <input type="time" value={newEventTime} onChange={(e) => setNewEventTime(e.target.value)} className="w-full text-sm border rounded-xl px-3 py-2"/>
+                  <label className="block text-xs font-bold text-slate-400 mb-1 flex items-center gap-1">
+                    <ClockIcon className="w-3.5 h-3.5 text-slate-400" /> 시간
+                  </label>
+                  <input 
+                    type="time" 
+                    value={newEventTime} 
+                    onChange={(e) => setNewEventTime(e.target.value)} 
+                    className="w-full text-sm border rounded-xl px-3 py-2.5 font-semibold"
+                    style={{ minHeight: '44px' }}
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-400 mb-1">대상</label>
-                  <select value={newEventCategory} onChange={(e) => setNewEventCategory(e.target.value)} className="w-full text-sm border rounded-xl px-3 py-2">
-                    <option value="joint">공동</option>
-                    <option value="husband">남편</option>
-                    <option value="wife">아내</option>
+                  <select 
+                    value={newEventCategory} 
+                    onChange={(e) => setNewEventCategory(e.target.value)} 
+                    className="w-full text-sm border rounded-xl px-3 py-2.5 font-semibold bg-white"
+                    style={{ minHeight: '44px' }}
+                  >
+                    <option value="joint">🥰 공동</option>
+                    <option value="husband">🤵 남편만</option>
+                    <option value="wife">👰 아내만</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">메모</label>
-                <textarea rows="2" placeholder="메모할 내용을 적어주세요." value={newEventMemo} onChange={(e) => setNewEventMemo(e.target.value)} className="w-full text-sm border rounded-xl px-3 py-2 resize-none"></textarea>
+                <label className="block text-xs font-bold text-slate-400 mb-1">상세 메모 (선택)</label>
+                <textarea 
+                  rows="2" 
+                  placeholder="준비물이나 메모할 내용을 적어주세요." 
+                  value={newEventMemo} 
+                  onChange={(e) => setNewEventMemo(e.target.value)} 
+                  className="w-full text-sm border rounded-xl px-3 py-2.5 resize-none font-medium"
+                ></textarea>
               </div>
 
               <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-slate-100 text-slate-600 py-2.5 rounded-xl text-sm">취소</button>
-                <button type="submit" className="flex-1 bg-rose-500 text-white py-2.5 rounded-xl text-sm font-semibold">{editingEventId ? '수정 완료' : '등록'}</button>
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)} 
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl text-sm font-bold transition"
+                  style={{ minHeight: '44px' }}
+                >
+                  취소
+                </button>
+                <button 
+                  type="submit" 
+                  className="flex-1 bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-xl text-sm font-bold transition shadow-md"
+                  style={{ minHeight: '44px' }}
+                >
+                  {editingEventId ? '수정 완료' : '등록'}
+                </button>
               </div>
             </form>
           </div>
@@ -673,9 +932,15 @@ export default function App() {
       {/* 알림 모달 */}
       {alertMessage && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center">
-            <p className="text-slate-600 text-sm mb-4">{alertMessage}</p>
-            <button onClick={() => setAlertMessage(null)} className="w-full py-2 bg-rose-500 text-white rounded-xl font-semibold text-sm">확인</button>
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl border border-rose-50 animate-in fade-in duration-100">
+            <p className="text-slate-600 text-sm font-semibold mb-4 leading-relaxed">{alertMessage}</p>
+            <button 
+              onClick={() => setAlertMessage(null)} 
+              className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold text-sm transition shadow-sm"
+              style={{ minHeight: '44px' }}
+            >
+              확인
+            </button>
           </div>
         </div>
       )}
