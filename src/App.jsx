@@ -19,12 +19,12 @@ import {
 // Firebase 설정 정보
 // ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyDC40v1FiAgPsQcMPQZJJ0s8Lc5kJ4NUsI",
-  authDomain: "schedule-a46eb.firebaseapp.com",
-  projectId: "schedule-a46eb",
-  storageBucket: "schedule-a46eb.firebasestorage.app",
-  messagingSenderId: "430186493236",
-  appId: "1:430186493236:web:da05a12f3128b293562161"
+  apiKey: "AIzaSyCT35ovZk50Ym5JdBi9fU2Clb36RIWLVGM",
+  authDomain: "couple-calendar-1cbd8.firebaseapp.com",
+  projectId: "couple-calendar-1cbd8",
+  storageBucket: "couple-calendar-1cbd8.firebasestorage.app",
+  messagingSenderId: "774569979715",
+  appId: "1:774569979715:web:0beefd85f4a994f57249f6"
 };
 
 // Firebase 초기화
@@ -278,6 +278,7 @@ export default function App() {
   };
 
   const formatDateString = (date) => {
+    if (!date || !(date instanceof Date)) return '';
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
@@ -290,8 +291,18 @@ export default function App() {
   };
 
   // --- 일정 추가/수정/삭제 핸들러 ---
-  const openAddModal = (dateStr) => {
-    setSelectedDateStr(dateStr);
+  // 매개변수가 Date 객체인지 확인하고 완벽하게 포맷팅하여 상태에 반영하는 안전 조치 추가
+  const openAddModal = (dateInput) => {
+    let formattedDate = '';
+    if (dateInput instanceof Date) {
+      formattedDate = formatDateString(dateInput);
+    } else if (typeof dateInput === 'string') {
+      formattedDate = dateInput;
+    } else {
+      formattedDate = formatDateString(new Date());
+    }
+
+    setSelectedDateStr(formattedDate);
     setNewEventTitle('');
     setNewEventTime('12:00');
     setNewEventMemo('');
@@ -351,7 +362,7 @@ export default function App() {
   };
 
   const handleDeleteEvent = async (id, e) => {
-    if (e) e.stopPropagation();
+    e.stopPropagation();
     if (!user) return;
     
     if (confirm("이 일정을 삭제하시겠습니까?")) {
@@ -511,7 +522,7 @@ export default function App() {
                 </div>
                 <div className="text-[10px] md:text-xs text-emerald-500 font-bold flex items-center gap-1 mt-0.5">
                   <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
-                  실시간 연동 가동 중
+                  실시간 연동 작동 중
                 </div>
               </div>
             </div>
@@ -691,7 +702,7 @@ export default function App() {
                             <div
                               key={evt.id}
                               onClick={(e) => openEditModal(evt, e)}
-                              className={`px-1.5 py-0.5 rounded-lg text-[10px] border flex items-center gap-1 justify-between group/item ${catBg} hover:shadow-xs transition`}
+                              className={`px-1.5 py-0.5 rounded-lg text-[10px] border flex items-center gap-1 justify-between group/item ${catBg}`}
                             >
                               <span className="truncate font-medium flex items-center gap-1">
                                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${catDot}`}></span>
@@ -704,9 +715,9 @@ export default function App() {
 
                       {/* 모바일 모드 전용 (간단 컬러 닷으로 깨짐 완전 방지!) */}
                       <div className="flex sm:hidden justify-center items-center gap-1 py-1 h-3 shrink-0">
-                        {hasHusband && <span className="w-1.5 h-1.5 rounded-full bg-sky-400"></span>}
-                        {hasWife && <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>}
-                        {hasJoint && <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>}
+                        {hasHusband && <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-scale"></span>}
+                        {hasWife && <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-scale"></span>}
+                        {hasJoint && <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-scale"></span>}
                       </div>
 
                     </div>
@@ -741,7 +752,7 @@ export default function App() {
                 <p className="text-xs text-slate-400 font-medium mt-0.5">날짜 칸을 누르면 해당 일자의 실시간 스케줄이 아래에 자세하게 로드됩니다.</p>
               </div>
               <button
-                onClick={() => openAddModal(new Date(selectedDateStr))}
+                onClick={() => openAddModal(selectedDateStr)}
                 className="w-full sm:w-auto px-4 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-xs md:text-sm font-black hover:bg-rose-100 transition flex items-center justify-center gap-1.5"
                 style={{ minHeight: '44px' }}
               >
